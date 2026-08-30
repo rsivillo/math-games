@@ -1,575 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Two-Step Equation Challenge</title>
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>Math Games</title>
 
   <style>
+
     body {
       font-family: Arial, sans-serif;
       background: #f3f4f6;
       margin: 0;
-      padding: 20px;
+      padding: 30px;
       color: #222;
     }
 
-    .game {
-      max-width: 700px;
-      margin: 30px auto;
-      background: white;
-      border-radius: 15px;
-      padding: 30px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    .container {
+      max-width: 900px;
+      margin: auto;
     }
 
     h1 {
       text-align: center;
-      margin-top: 0;
+      font-size: 42px;
+      margin-bottom: 5px;
     }
 
-    .top {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    .score {
-      font-size: 22px;
-      font-weight: bold;
-    }
-
-    .equation {
-      margin: 35px 0;
-      padding: 35px 15px;
-      background: #eef2f7;
-      border-radius: 12px;
+    .subtitle {
       text-align: center;
-      font-size: 40px;
-      font-weight: bold;
-    }
-
-    .answer-area {
-      text-align: center;
-    }
-
-    input {
-      width: 130px;
-      font-size: 24px;
-      padding: 10px;
-      text-align: center;
-      border: 2px solid #bbb;
-      border-radius: 8px;
-    }
-
-    button {
+      color: #666;
       font-size: 18px;
-      padding: 11px 20px;
-      margin-left: 8px;
-      border: none;
-      border-radius: 8px;
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      margin-top: 35px;
+    }
+
+    .games {
+      display: grid;
+
+      grid-template-columns:
+        repeat(auto-fit, minmax(250px, 1fr));
+
+      gap: 20px;
+    }
+
+    .game-card {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+
+      box-shadow:
+        0 3px 10px rgba(0,0,0,.12);
+    }
+
+    .game-card h3 {
+      margin-top: 0;
+      font-size: 24px;
+    }
+
+    .game-card p {
+      color: #555;
+      line-height: 1.5;
+    }
+
+    .play-button {
+      display: inline-block;
+
+      margin-top: 10px;
+
       background: #2563eb;
       color: white;
-      cursor: pointer;
+
+      padding: 12px 20px;
+
+      text-decoration: none;
+
+      border-radius: 8px;
+
+      font-weight: bold;
     }
 
-    button:hover {
+    .play-button:hover {
       background: #1d4ed8;
     }
 
-    #feedback {
-      min-height: 50px;
-      margin-top: 20px;
-      text-align: center;
-      font-size: 20px;
-      font-weight: bold;
+    .coming-soon {
+      color: #888;
+      font-style: italic;
     }
 
-    .points {
-      margin-top: 30px;
-      border-top: 1px solid #ccc;
-      padding-top: 20px;
-    }
-
-    .points table {
-      margin: auto;
-      border-collapse: collapse;
-    }
-
-    .points td {
-      padding: 6px 20px;
-    }
-
-    .active {
-      background: #dbeafe;
-      font-weight: bold;
-    }
-
-    #results {
-      display: none;
-      text-align: center;
-    }
-
-    #results h2 {
-      font-size: 32px;
-    }
-
-    #finalScore {
-      font-size: 42px;
-      font-weight: bold;
-    }
-
-    .small {
-      color: #666;
-      font-size: 15px;
-    }
   </style>
 </head>
 
+
 <body>
 
-<div class="game">
+<div class="container">
 
-  <div id="gameScreen">
+  <h1>Math Games</h1>
 
-    <h1>Two-Step Equation Challenge</h1>
+  <div class="subtitle">
+    Practice your math skills with these interactive activities.
+  </div>
 
-    <div class="top">
-      <div id="problemNumber">Problem 1 of 10</div>
-      <div class="score">Score: <span id="score">0</span></div>
+
+  <h2>Math 1</h2>
+
+  <div class="games">
+
+
+    <div class="game-card">
+
+      <h3>Two-Step Equation Challenge</h3>
+
+      <p>
+        Solve 10 two-step equations.
+        Earn more points by solving each equation
+        in fewer attempts.
+      </p>
+
+      <a
+        class="play-button"
+        href="two-step-equations/">
+
+        Play Game
+
+      </a>
+
     </div>
 
-    <div class="equation" id="equation">
-      3x + 5 = 20
+
+    <div class="game-card">
+
+      <h3>More Games Coming Soon</h3>
+
+      <p class="coming-soon">
+        New Math 1 activities will be added here.
+      </p>
+
     </div>
 
-    <div class="answer-area">
-      <label for="answer"><strong>x = </strong></label>
-      <input
-        type="number"
-        id="answer"
-        step="any"
-        autocomplete="off"
-      >
-
-      <button id="checkButton">Check Answer</button>
-    </div>
-
-    <div id="feedback">
-      This attempt is worth 10 points.
-    </div>
-
-    <div class="points">
-      <table>
-        <tr id="try1">
-          <td>1st try</td>
-          <td>10 points</td>
-        </tr>
-        <tr id="try2">
-          <td>2nd try</td>
-          <td>5 points</td>
-        </tr>
-        <tr id="try3">
-          <td>3rd try</td>
-          <td>2 points</td>
-        </tr>
-        <tr id="try4">
-          <td>4th try</td>
-          <td>1 point</td>
-        </tr>
-        <tr id="try5">
-          <td>5th try</td>
-          <td>0 points</td>
-        </tr>
-      </table>
-    </div>
 
   </div>
 
 
-  <div id="results">
-    <h1>Game Complete!</h1>
+  <h2>AP Statistics</h2>
 
-    <p>Your final score is:</p>
+  <div class="games">
 
-    <div id="finalScore">0 / 100</div>
+    <div class="game-card">
 
-    <p id="finalMessage"></p>
+      <h3>Statistics Activities</h3>
 
-    <button id="playAgain">Play Again</button>
+      <p class="coming-soon">
+        Interactive AP Statistics activities
+        coming soon.
+      </p>
+
+    </div>
+
   </div>
 
 </div>
 
-
-<script>
-
-const pointValues = [10, 5, 2, 1, 0];
-
-let problems = [];
-let currentProblem = 0;
-let attempt = 1;
-let score = 0;
-let correctProblems = 0;
-let locked = false;
-
-
-// ----------------------------
-// RANDOM NUMBER
-// ----------------------------
-
-function randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-
-// ----------------------------
-// CREATE ONE EQUATION
-// ----------------------------
-
-function createProblem() {
-
-  // Choose an integer answer
-  const x = randomInt(-9, 12);
-
-  // Coefficient
-  let a = randomInt(2, 9);
-
-  // Occasionally make coefficient negative
-  if (Math.random() < 0.2) {
-    a = -a;
-  }
-
-  // Addition/subtraction number
-  let b = randomInt(-12, 12);
-
-  if (b === 0) {
-    b = randomInt(1, 9);
-  }
-
-  // Calculate right side
-  const c = a * x + b;
-
-  let coefficientText;
-
-  if (a === 1) {
-    coefficientText = "";
-  } else if (a === -1) {
-    coefficientText = "−";
-  } else {
-    coefficientText = a;
-  }
-
-  let middleText;
-
-  if (b > 0) {
-    middleText = " + " + b;
-  } else {
-    middleText = " − " + Math.abs(b);
-  }
-
-  return {
-    answer: x,
-    equation: coefficientText + "x" + middleText + " = " + c
-  };
-}
-
-
-// ----------------------------
-// CREATE TEN PROBLEMS
-// ----------------------------
-
-function createGame() {
-
-  problems = [];
-
-  while (problems.length < 10) {
-
-    const newProblem = createProblem();
-
-    const duplicate = problems.some(
-      problem => problem.equation === newProblem.equation
-    );
-
-    if (!duplicate) {
-      problems.push(newProblem);
-    }
-  }
-}
-
-
-// ----------------------------
-// DISPLAY PROBLEM
-// ----------------------------
-
-function showProblem() {
-
-  locked = false;
-
-  const problem = problems[currentProblem];
-
-  document.getElementById("equation").textContent =
-    problem.equation;
-
-  document.getElementById("problemNumber").textContent =
-    "Problem " + (currentProblem + 1) + " of 10";
-
-  document.getElementById("score").textContent =
-    score;
-
-  document.getElementById("answer").value = "";
-
-  document.getElementById("answer").disabled = false;
-
-  document.getElementById("checkButton").disabled = false;
-
-  document.getElementById("feedback").textContent =
-    "This attempt is worth " +
-    pointValues[attempt - 1] +
-    " points.";
-
-  updateAttemptDisplay();
-
-  document.getElementById("answer").focus();
-}
-
-
-// ----------------------------
-// HIGHLIGHT CURRENT ATTEMPT
-// ----------------------------
-
-function updateAttemptDisplay() {
-
-  for (let i = 1; i <= 5; i++) {
-
-    const row = document.getElementById("try" + i);
-
-    row.classList.remove("active");
-
-    if (i === attempt) {
-      row.classList.add("active");
-    }
-  }
-}
-
-
-// ----------------------------
-// CHECK ANSWER
-// ----------------------------
-
-function checkAnswer() {
-
-  if (locked) {
-    return;
-  }
-
-  const answerBox = document.getElementById("answer");
-
-  if (answerBox.value === "") {
-
-    document.getElementById("feedback").textContent =
-      "Enter an answer first.";
-
-    return;
-  }
-
-  const studentAnswer = Number(answerBox.value);
-
-  const correctAnswer =
-    problems[currentProblem].answer;
-
-
-  // CORRECT
-  if (studentAnswer === correctAnswer) {
-
-    const earnedPoints =
-      pointValues[attempt - 1];
-
-    score += earnedPoints;
-
-    correctProblems++;
-
-    document.getElementById("score").textContent =
-      score;
-
-    document.getElementById("feedback").textContent =
-      "Correct! You earned " +
-      earnedPoints +
-      " points.";
-
-    moveToNextProblem(1200);
-  }
-
-
-  // FIFTH ATTEMPT INCORRECT
-  else if (attempt === 5) {
-
-    document.getElementById("feedback").textContent =
-      "The answer was x = " +
-      correctAnswer +
-      ". Moving to the next problem.";
-
-    moveToNextProblem(2000);
-  }
-
-
-  // INCORRECT — TRY AGAIN
-  else {
-
-    attempt++;
-
-    answerBox.value = "";
-
-    document.getElementById("feedback").textContent =
-      "Not quite. Try again! This attempt is worth " +
-      pointValues[attempt - 1] +
-      " points.";
-
-    updateAttemptDisplay();
-
-    answerBox.focus();
-  }
-}
-
-
-// ----------------------------
-// NEXT PROBLEM
-// ----------------------------
-
-function moveToNextProblem(delay) {
-
-  locked = true;
-
-  document.getElementById("answer").disabled = true;
-
-  document.getElementById("checkButton").disabled = true;
-
-  setTimeout(function() {
-
-    currentProblem++;
-
-    attempt = 1;
-
-    if (currentProblem >= 10) {
-
-      finishGame();
-
-    } else {
-
-      showProblem();
-    }
-
-  }, delay);
-}
-
-
-// ----------------------------
-// FINISH GAME
-// ----------------------------
-
-function finishGame() {
-
-  document.getElementById("gameScreen").style.display =
-    "none";
-
-  document.getElementById("results").style.display =
-    "block";
-
-  document.getElementById("finalScore").textContent =
-    score + " / 100";
-
-  let message;
-
-  if (score >= 90) {
-
-    message =
-      "Excellent work! You solved most equations on the first try.";
-
-  } else if (score >= 70) {
-
-    message =
-      "Nice job! You showed strong two-step equation skills.";
-
-  } else if (score >= 50) {
-
-    message =
-      "Good effort. Keep working on getting more equations correct on your first attempt.";
-
-  } else {
-
-    message =
-      "Keep practicing! Remember to undo addition or subtraction first, then multiplication or division.";
-  }
-
-  document.getElementById("finalMessage").textContent =
-    "You solved " +
-    correctProblems +
-    " out of 10 equations correctly. " +
-    message;
-}
-
-
-// ----------------------------
-// PLAY AGAIN
-// ----------------------------
-
-function restartGame() {
-
-  currentProblem = 0;
-  attempt = 1;
-  score = 0;
-  correctProblems = 0;
-  locked = false;
-
-  createGame();
-
-  document.getElementById("results").style.display =
-    "none";
-
-  document.getElementById("gameScreen").style.display =
-    "block";
-
-  showProblem();
-}
-
-
-// ----------------------------
-// BUTTONS
-// ----------------------------
-
-document
-  .getElementById("checkButton")
-  .addEventListener("click", checkAnswer);
-
-
-document
-  .getElementById("answer")
-  .addEventListener("keydown", function(event) {
-
-    if (event.key === "Enter") {
-
-      event.preventDefault();
-
-      checkAnswer();
-    }
-  });
-
-
-document
-  .getElementById("playAgain")
-  .addEventListener("click", restartGame);
-
-
-// ----------------------------
-// START GAME
-// ----------------------------
-
-createGame();
-
-showProblem();
-
-</script>
-
 </body>
+
 </html>
