@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Normal Distribution Calculator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:22px;font-family:Arial,Helvetica,sans-serif;background:#f3f4f6;color:#1f2937}.app{max-width:1100px;margin:0 auto}h1{text-align:center;margin:0 0 6px;font-size:36px}.subtitle{text-align:center;color:#6b7280;margin-bottom:22px}.tabs{display:flex;gap:8px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}.tab{border:0;padding:11px 20px;border-radius:9px;cursor:pointer;font-weight:bold;font-size:16px;background:#e5e7eb;color:#1f2937}.tab.active{background:#2563eb;color:#fff}.layout{display:grid;grid-template-columns:310px 1fr;gap:18px}.panel{background:#fff;border-radius:14px;padding:20px;box-shadow:0 3px 12px rgba(0,0,0,.1)}.controls h2{margin:0 0 14px;font-size:22px}label{display:block;margin-top:13px;margin-bottom:5px;font-weight:bold;font-size:14px}input,select{width:100%;padding:10px;font-size:17px;border:2px solid #cbd5e1;border-radius:8px;background:#fff}.calculate{width:100%;border:0;border-radius:9px;margin-top:18px;padding:12px;background:#2563eb;color:#fff;font-size:17px;font-weight:bold;cursor:pointer}.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.hidden{display:none!important}.result{margin-top:16px;padding:14px;border-radius:10px;background:#eff6ff;text-align:center;min-height:70px}.result-label{font-size:13px;color:#64748b;margin-bottom:5px}.result-value{font-size:26px;font-weight:bold;color:#1d4ed8}.result-detail{margin-top:5px;font-size:14px;color:#475569}.graph-panel{padding:14px}canvas{width:100%;height:auto;display:block;background:#fff;border-radius:10px}.equation{text-align:center;color:#475569;font-size:14px;margin-top:8px}.tip{margin-top:14px;color:#64748b;font-size:13px;line-height:1.45}.boundary-note{margin-top:6px;color:#64748b;font-size:12px}@media(max-width:760px){body{padding:12px}.layout{grid-template-columns:1fr}h1{font-size:29px}}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>Normal Distribution Calculator</h1>
+<div class="subtitle">Visualize Normal CDF and InvNorm calculations</div>
+<div class="tabs">
+<button class="tab active" id="cdfTab">Normal CDF</button>
+<button class="tab" id="invTab">InvNorm</button>
+</div>
+<div class="layout">
+<section class="panel controls">
+<div id="cdfControls">
+<h2>Normal CDF</h2>
+<div class="field-row">
+<div><label for="cdfMean">Mean (μ)</label><input id="cdfMean" type="number" step="any" value="100"></div>
+<div><label for="cdfSD">SD (σ)</label><input id="cdfSD" type="number" step="any" value="15"></div>
+</div>
+<label for="cdfShade">Shaded Region</label>
+<select id="cdfShade">
+<option value="left">Left of a value</option>
+<option value="between" selected>Between two values</option>
+<option value="right">Right of a value</option>
+</select>
+<div id="singleValueBox" class="hidden"><label for="cdfValue">x-value</label><input id="cdfValue" type="number" step="any" value="115"></div>
+<div id="betweenBox">
+<div class="field-row">
+<div><label for="cdfLower">Lower value</label><input id="cdfLower" type="number" step="any" value="85"></div>
+<div><label for="cdfUpper">Upper value</label><input id="cdfUpper" type="number" step="any" value="115"></div>
+</div>
+</div>
+<button class="calculate" id="cdfCalculate">Calculate & Shade</button>
+<div class="result">
+<div class="result-label">Proportion Shaded</div>
+<div class="result-value" id="cdfResult">0.6827</div>
+<div class="result-detail" id="cdfDetail">About 68.27% of the distribution</div>
+</div>
+<div class="tip">This is the visual equivalent of a calculator's <strong>normalcdf</strong> command.</div>
+</div>
+
+<div id="invControls" class="hidden">
+<h2>InvNorm</h2>
+<div class="field-row">
+<div><label for="invMean">Mean (μ)</label><input id="invMean" type="number" step="any" value="100"></div>
+<div><label for="invSD">SD (σ)</label><input id="invSD" type="number" step="any" value="15"></div>
+</div>
+<label for="invTail">Shaded Area</label>
+<select id="invTail"><option value="left" selected>Area to the left</option><option value="right">Area to the right</option></select>
+<label for="invArea">Proportion shaded</label>
+<input id="invArea" type="number" min="0.000001" max="0.999999" step="any" value="0.90">
+<div class="boundary-note">Enter a decimal between 0 and 1, such as 0.90.</div>
+<button class="calculate" id="invCalculate">Find x-value</button>
+<div class="result">
+<div class="result-label">x-value</div>
+<div class="result-value" id="invResult">119.2232</div>
+<div class="result-detail" id="invDetail">90.00% of the curve is to the left</div>
+</div>
+<div class="tip">This works like <strong>invNorm(area, μ, σ)</strong>. Right-tail areas are converted automatically.</div>
+</div>
+</section>
+
+<section class="panel graph-panel">
+<canvas id="graph" width="820" height="500"></canvas>
+<div class="equation" id="graphCaption">Normal distribution with μ = 100 and σ = 15</div>
+</section>
+</div>
+</div>
+
+<script>
+const canvas=document.getElementById("graph"),ctx=canvas.getContext("2d");
+const cdfTab=document.getElementById("cdfTab"),invTab=document.getElementById("invTab");
+const cdfControls=document.getElementById("cdfControls"),invControls=document.getElementById("invControls");
+const cdfShade=document.getElementById("cdfShade"),singleValueBox=document.getElementById("singleValueBox"),betweenBox=document.getElementById("betweenBox");
+
+function erf(x){const s=x>=0?1:-1;x=Math.abs(x);const a1=.254829592,a2=-.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=.3275911,t=1/(1+p*x);const y=1-(((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t)*Math.exp(-x*x);return s*y}
+function normalCDF(x,m,s){return .5*(1+erf((x-m)/(s*Math.sqrt(2))))}
+function inverseStandardNormal(p){
+if(p<=0||p>=1)return p===0?-Infinity:p===1?Infinity:NaN;
+const a=[-39.69683028665376,220.9460984245205,-275.9285104469687,138.357751867269,-30.66479806614716,2.506628277459239];
+const b=[-54.47609879822406,161.5858368580409,-155.6989798598866,66.80131188771972,-13.28068155288572];
+const c=[-.007784894002430293,-.3223964580411365,-2.400758277161838,-2.549732539343734,4.374664141464968,2.938163982698783];
+const d=[.007784695709041462,.3224671290700398,2.445134137142996,3.754408661907416];
+const pl=.02425,ph=1-pl;let q,r;
+if(p<pl){q=Math.sqrt(-2*Math.log(p));return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1)}
+if(p>ph){q=Math.sqrt(-2*Math.log(1-p));return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1)}
+q=p-.5;r=q*q;return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1)
+}
+function normalPDF(x,m,s){const z=(x-m)/s;return Math.exp(-.5*z*z)/(s*Math.sqrt(2*Math.PI))}
+function fmt(x,d=2){return Number.isFinite(x)?Number(x.toFixed(d)).toString():"—"}
+
+function drawNormal(mean,sd,mode,a,b,cutoff){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+const W=canvas.width,H=canvas.height,L=65,R=W-28,T=40,axisY=H-78,xMin=mean-4*sd,xMax=mean+4*sd,maxPdf=normalPDF(mean,mean,sd);
+const xToPx=x=>L+(x-xMin)/(xMax-xMin)*(R-L),pdfToPy=y=>axisY-(y/maxPdf)*(axisY-T-18);
+ctx.fillStyle="#fff";ctx.fillRect(0,0,W,H);
+ctx.strokeStyle="#e5e7eb";ctx.lineWidth=1;
+for(let i=1;i<=4;i++){const y=T+i*(axisY-T)/5;ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(R,y);ctx.stroke()}
+ctx.beginPath();let active=false;const steps=700;
+for(let i=0;i<=steps;i++){
+const x=xMin+(xMax-xMin)*i/steps;
+let shaded=mode==="left"?x<=cutoff:mode==="right"?x>=cutoff:x>=a&&x<=b;
+if(shaded){
+const px=xToPx(x),py=pdfToPy(normalPDF(x,mean,sd));
+if(!active){ctx.beginPath();ctx.moveTo(px,axisY);ctx.lineTo(px,py);active=true}else ctx.lineTo(px,py)
+}else if(active){ctx.lineTo(xToPx(x),axisY);ctx.closePath();ctx.fillStyle="rgba(37,99,235,.32)";ctx.fill();active=false}
+}
+if(active){ctx.lineTo(R,axisY);ctx.closePath();ctx.fillStyle="rgba(37,99,235,.32)";ctx.fill()}
+ctx.strokeStyle="#111827";ctx.lineWidth=3;ctx.beginPath();
+for(let i=0;i<=steps;i++){const x=xMin+(xMax-xMin)*i/steps,px=xToPx(x),py=pdfToPy(normalPDF(x,mean,sd));i===0?ctx.moveTo(px,py):ctx.lineTo(px,py)}
+ctx.stroke();
+ctx.strokeStyle="#334155";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(L,axisY);ctx.lineTo(R,axisY);ctx.stroke();
+ctx.font="14px Arial";ctx.textAlign="center";ctx.fillStyle="#334155";
+for(let k=-3;k<=3;k++){const x=mean+k*sd,px=xToPx(x);ctx.beginPath();ctx.moveTo(px,axisY-5);ctx.lineTo(px,axisY+6);ctx.stroke();ctx.fillText(fmt(x,2),px,axisY+26);if(k===0){ctx.font="bold 13px Arial";ctx.fillText("μ",px,axisY+45);ctx.font="14px Arial"}}
+function boundary(x,label){if(!Number.isFinite(x))return;const cx=Math.max(xMin,Math.min(xMax,x)),px=xToPx(cx),py=pdfToPy(normalPDF(cx,mean,sd));ctx.save();ctx.strokeStyle="#dc2626";ctx.lineWidth=2;ctx.setLineDash([6,5]);ctx.beginPath();ctx.moveTo(px,axisY);ctx.lineTo(px,Math.max(T,py-10));ctx.stroke();ctx.setLineDash([]);ctx.fillStyle="#dc2626";ctx.font="bold 14px Arial";ctx.fillText(label,px,Math.max(22,py-18));ctx.restore()}
+if(mode==="between"){boundary(a,fmt(a,3));boundary(b,fmt(b,3))}else boundary(cutoff,fmt(cutoff,3))
+}
+
+function validMS(m,s){return Number.isFinite(m)&&Number.isFinite(s)&&s>0}
+function updateCDFFields(){if(cdfShade.value==="between"){betweenBox.classList.remove("hidden");singleValueBox.classList.add("hidden")}else{betweenBox.classList.add("hidden");singleValueBox.classList.remove("hidden")}}
+function calculateCDF(){
+const m=Number(document.getElementById("cdfMean").value),s=Number(document.getElementById("cdfSD").value),mode=cdfShade.value;
+if(!validMS(m,s)){document.getElementById("cdfResult").textContent="Check inputs";document.getElementById("cdfDetail").textContent="Standard deviation must be greater than 0.";return}
+let p=0,a=null,b=null,c=null;
+if(mode==="between"){a=Number(document.getElementById("cdfLower").value);b=Number(document.getElementById("cdfUpper").value);if(!Number.isFinite(a)||!Number.isFinite(b))return;if(a>b)[a,b]=[b,a];p=normalCDF(b,m,s)-normalCDF(a,m,s)}
+else{c=Number(document.getElementById("cdfValue").value);if(!Number.isFinite(c))return;const lp=normalCDF(c,m,s);p=mode==="left"?lp:1-lp}
+p=Math.max(0,Math.min(1,p));document.getElementById("cdfResult").textContent=p.toFixed(4);document.getElementById("cdfDetail").textContent="About "+(p*100).toFixed(2)+"% of the distribution";document.getElementById("graphCaption").textContent=`Normal distribution with μ = ${fmt(m,3)} and σ = ${fmt(s,3)}`;drawNormal(m,s,mode,a,b,c)
+}
+function calculateInv(){
+const m=Number(document.getElementById("invMean").value),s=Number(document.getElementById("invSD").value),area=Number(document.getElementById("invArea").value),tail=document.getElementById("invTail").value;
+if(!validMS(m,s)||!Number.isFinite(area)||area<=0||area>=1){document.getElementById("invResult").textContent="Check inputs";document.getElementById("invDetail").textContent="Use σ > 0 and an area strictly between 0 and 1.";return}
+const left=tail==="left"?area:1-area,z=inverseStandardNormal(left),x=m+z*s;
+document.getElementById("invResult").textContent=x.toFixed(4);document.getElementById("invDetail").textContent=`${(area*100).toFixed(2)}% of the curve is to the ${tail}`;document.getElementById("graphCaption").textContent=`Normal distribution with μ = ${fmt(m,3)} and σ = ${fmt(s,3)}`;drawNormal(m,s,tail,null,null,x)
+}
+cdfTab.addEventListener("click",()=>{cdfTab.classList.add("active");invTab.classList.remove("active");cdfControls.classList.remove("hidden");invControls.classList.add("hidden");calculateCDF()});
+invTab.addEventListener("click",()=>{invTab.classList.add("active");cdfTab.classList.remove("active");invControls.classList.remove("hidden");cdfControls.classList.add("hidden");calculateInv()});
+cdfShade.addEventListener("change",()=>{updateCDFFields();calculateCDF()});
+document.getElementById("cdfCalculate").addEventListener("click",calculateCDF);
+document.getElementById("invCalculate").addEventListener("click",calculateInv);
+["cdfMean","cdfSD","cdfValue","cdfLower","cdfUpper"].forEach(id=>document.getElementById(id).addEventListener("change",calculateCDF));
+["invMean","invSD","invArea","invTail"].forEach(id=>document.getElementById(id).addEventListener("change",calculateInv));
+updateCDFFields();calculateCDF();
+</script>
+</body>
+</html>
