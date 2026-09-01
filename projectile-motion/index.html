@@ -1,0 +1,1266 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projectile Motion Simulator</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      color: #222;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 3px 12px rgba(0,0,0,.12);
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 0;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      font-size: 18px;
+      padding: 10px;
+      border: 2px solid #bbb;
+      border-radius: 8px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 14px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #launchButton {
+      background: #2563eb;
+      color: white;
+    }
+
+    #resetButton {
+      background: #e5e7eb;
+      color: #222;
+    }
+
+    .equation {
+      margin-top: 20px;
+      padding: 14px;
+      background: #eef2f7;
+      border-radius: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .stat {
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .stat-value {
+      margin-top: 4px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    #message {
+      margin-top: 16px;
+      min-height: 44px;
+      color: #555;
+      text-align: center;
+    }
+
+    .canvas-panel {
+      background: white;
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 3px 12px rgba(0,0,0,.12);
+    }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 10px;
+      border: 1px solid #bbb;
+    }
+
+    .note {
+      text-align: center;
+      color: #666;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .range-note {
+      font-size: 12px;
+      color: #777;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 800px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Projectile Motion Simulator</h1>
+
+<div class="container">
+
+  <div class="panel">
+
+    <label for="velocity">Initial velocity (ft/s)</label>
+    <input
+      id="velocity"
+      type="number"
+      value="32"
+      min="-500"
+      max="500"
+      step="1"
+    >
+    <div class="range-note">
+      Allowed range: −500 to 500 ft/s
+    </div>
+
+    <label for="height">Building height (ft)</label>
+    <input
+      id="height"
+      type="number"
+      value="100"
+      min="1"
+      max="1000"
+      step="1"
+    >
+
+    <button id="launchButton">
+      Launch Ball
+    </button>
+
+    <button id="resetButton">
+      Reset
+    </button>
+
+    <div class="equation" id="equationDisplay">
+      h = −16t² + 32t + 100
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Time</div>
+        <div class="stat-value" id="timer">
+          0.00 s
+        </div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-label">Height</div>
+        <div class="stat-value" id="heightNow">
+          100.0 ft
+        </div>
+      </div>
+    </div>
+
+    <div id="message">
+      Enter values and launch the ball.
+    </div>
+
+  </div>
+
+
+  <div class="canvas-panel">
+
+    <canvas
+      id="scene"
+      width="900"
+      height="520">
+    </canvas>
+
+    <div class="note">
+      Vertical motion follows
+      h = −16t² + vt + h₀.
+      Horizontal motion is only for visualization.
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+const canvas =
+  document.getElementById("scene");
+
+const ctx =
+  canvas.getContext("2d");
+
+const velocityInput =
+  document.getElementById("velocity");
+
+const heightInput =
+  document.getElementById("height");
+
+const launchButton =
+  document.getElementById("launchButton");
+
+const resetButton =
+  document.getElementById("resetButton");
+
+const timer =
+  document.getElementById("timer");
+
+const heightNow =
+  document.getElementById("heightNow");
+
+const equationDisplay =
+  document.getElementById("equationDisplay");
+
+const message =
+  document.getElementById("message");
+
+
+let v0 = 32;
+let h0 = 100;
+
+let impactTime = 0;
+
+let running = false;
+let shattered = false;
+
+let startReal = 0;
+
+let animationId = null;
+
+let particles = [];
+
+let lastBall = {
+  x: 0,
+  y: 0
+};
+
+
+// Slows the simulation down
+// so students can watch it.
+const playbackRate = 0.55;
+
+
+// Drawing settings
+const buildingX = 105;
+const buildingWidth = 125;
+
+const groundY = 455;
+
+const ballRadius = 12;
+
+
+// -----------------------------
+// CLAMP
+// -----------------------------
+
+function clamp(number, min, max) {
+
+  return Math.max(
+    min,
+    Math.min(max, number)
+  );
+}
+
+
+// -----------------------------
+// TIME BALL HITS GROUND
+// -----------------------------
+
+function calculateImpactTime(v, h) {
+
+  return (
+    v +
+    Math.sqrt(
+      v * v +
+      64 * h
+    )
+  ) / 32;
+}
+
+
+// -----------------------------
+// HEIGHT FORMULA
+// -----------------------------
+
+function getHeight(t) {
+
+  return (
+    -16 * t * t +
+    v0 * t +
+    h0
+  );
+}
+
+
+// -----------------------------
+// MAXIMUM HEIGHT
+// -----------------------------
+
+function getMaximumHeight() {
+
+  if (v0 <= 0) {
+    return h0;
+  }
+
+  const vertexTime =
+    v0 / 32;
+
+  return Math.max(
+    h0,
+    getHeight(vertexTime)
+  );
+}
+
+
+// -----------------------------
+// DISPLAY EQUATION
+// -----------------------------
+
+function updateEquation() {
+
+  let velocityPart;
+
+  if (v0 >= 0) {
+
+    velocityPart =
+      "+ " +
+      v0 +
+      "t";
+
+  } else {
+
+    velocityPart =
+      "− " +
+      Math.abs(v0) +
+      "t";
+  }
+
+  equationDisplay.textContent =
+    "h = −16t² " +
+    velocityPart +
+    " + " +
+    h0;
+}
+
+
+// -----------------------------
+// SCALE WORLD TO CANVAS
+// -----------------------------
+
+function getWorldScale() {
+
+  const topHeight =
+    Math.max(
+      20,
+      getMaximumHeight() * 1.12
+    );
+
+  return (
+    groundY - 35
+  ) / topHeight;
+}
+
+
+// -----------------------------
+// BALL POSITION
+// -----------------------------
+
+function getBallPosition(t) {
+
+  const scale =
+    getWorldScale();
+
+  const height =
+    Math.max(
+      0,
+      getHeight(t)
+    );
+
+  const startX =
+    buildingX +
+    buildingWidth +
+    ballRadius;
+
+  const usableWidth =
+    Math.max(
+      300,
+      canvas.width -
+      startX -
+      70
+    );
+
+  const x =
+    startX +
+    (
+      t /
+      Math.max(
+        0.01,
+        impactTime
+      )
+    ) *
+    usableWidth;
+
+  const y =
+    groundY -
+    height *
+    scale -
+    ballRadius;
+
+  return {
+    x: x,
+    y: y,
+    height: height
+  };
+}
+
+
+// -----------------------------
+// DRAW BACKGROUND
+// -----------------------------
+
+function drawBackground() {
+
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+
+  // Sky
+  ctx.fillStyle =
+    "#dbeafe";
+
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    groundY
+  );
+
+
+  // Ground
+  ctx.fillStyle =
+    "#dcfce7";
+
+  ctx.fillRect(
+    0,
+    groundY,
+    canvas.width,
+    canvas.height - groundY
+  );
+
+
+  // Clouds
+  for (
+    let i = 0;
+    i < 8;
+    i++
+  ) {
+
+    ctx.fillStyle =
+      "rgba(255,255,255,.72)";
+
+    const x =
+      50 +
+      i * 125;
+
+    const y =
+      45 +
+      (i % 3) * 28;
+
+    ctx.beginPath();
+
+    ctx.arc(
+      x,
+      y,
+      18,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.arc(
+      x + 20,
+      y - 7,
+      24,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.arc(
+      x + 43,
+      y,
+      17,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+  }
+
+
+  const scale =
+    getWorldScale();
+
+  const roofY =
+    groundY -
+    h0 *
+    scale;
+
+  const buildingHeight =
+    Math.max(
+      8,
+      groundY - roofY
+    );
+
+
+  // Building
+  ctx.fillStyle =
+    "#64748b";
+
+  ctx.fillRect(
+    buildingX,
+    roofY,
+    buildingWidth,
+    buildingHeight
+  );
+
+
+  // Roof
+  ctx.fillStyle =
+    "#475569";
+
+  ctx.fillRect(
+    buildingX - 6,
+    roofY - 9,
+    buildingWidth + 12,
+    10
+  );
+
+
+  // Windows
+  if (buildingHeight > 55) {
+
+    const rows =
+      Math.min(
+        8,
+        Math.floor(
+          buildingHeight / 55
+        )
+      );
+
+    for (
+      let row = 0;
+      row < rows;
+      row++
+    ) {
+
+      for (
+        let col = 0;
+        col < 2;
+        col++
+      ) {
+
+        const windowY =
+          roofY +
+          25 +
+          row * 48;
+
+        if (
+          windowY >
+          groundY - 20
+        ) {
+          continue;
+        }
+
+        ctx.fillStyle =
+          "#bfdbfe";
+
+        ctx.fillRect(
+          buildingX +
+          22 +
+          col * 56,
+          windowY,
+          28,
+          24
+        );
+      }
+    }
+  }
+
+
+  // Ground line
+  ctx.strokeStyle =
+    "#166534";
+
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    0,
+    groundY
+  );
+
+  ctx.lineTo(
+    canvas.width,
+    groundY
+  );
+
+  ctx.stroke();
+
+
+  // Height label
+  ctx.fillStyle =
+    "#334155";
+
+  ctx.font =
+    "16px Arial";
+
+  ctx.fillText(
+    h0 + " ft",
+    buildingX + 35,
+    Math.max(
+      25,
+      roofY - 18
+    )
+  );
+}
+
+
+// -----------------------------
+// DRAW TRAJECTORY
+// -----------------------------
+
+function drawTrajectory(currentTime) {
+
+  if (
+    impactTime <= 0
+  ) {
+    return;
+  }
+
+  ctx.save();
+
+  ctx.strokeStyle =
+    "rgba(71,85,105,.45)";
+
+  ctx.lineWidth = 2;
+
+  ctx.setLineDash(
+    [7,7]
+  );
+
+  ctx.beginPath();
+
+  const steps = 80;
+
+  const endTime =
+    Math.min(
+      currentTime,
+      impactTime
+    );
+
+  for (
+    let i = 0;
+    i <= steps;
+    i++
+  ) {
+
+    const t =
+      endTime *
+      i /
+      steps;
+
+    const position =
+      getBallPosition(t);
+
+    if (i === 0) {
+
+      ctx.moveTo(
+        position.x,
+        position.y
+      );
+
+    } else {
+
+      ctx.lineTo(
+        position.x,
+        position.y
+      );
+    }
+  }
+
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+
+// -----------------------------
+// DRAW BALL
+// -----------------------------
+
+function drawBall(position) {
+
+  ctx.fillStyle =
+    "#ef4444";
+
+  ctx.beginPath();
+
+  ctx.arc(
+    position.x,
+    position.y,
+    ballRadius,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fill();
+
+  ctx.strokeStyle =
+    "#7f1d1d";
+
+  ctx.lineWidth = 2;
+
+  ctx.stroke();
+}
+
+
+// -----------------------------
+// CREATE SHATTER PIECES
+// -----------------------------
+
+function createShatter(x, y) {
+
+  particles = [];
+
+  for (
+    let i = 0;
+    i < 22;
+    i++
+  ) {
+
+    const angle =
+      Math.random() *
+      Math.PI *
+      2;
+
+    const speed =
+      1.5 +
+      Math.random() *
+      5;
+
+    particles.push({
+
+      x: x,
+      y: y,
+
+      vx:
+        Math.cos(angle) *
+        speed,
+
+      vy:
+        Math.sin(angle) *
+        speed -
+        3,
+
+      size:
+        3 +
+        Math.random() *
+        5,
+
+      life: 1
+
+    });
+  }
+}
+
+
+// -----------------------------
+// UPDATE SHATTER PIECES
+// -----------------------------
+
+function updateParticles() {
+
+  particles.forEach(
+    function(particle) {
+
+      particle.x +=
+        particle.vx;
+
+      particle.y +=
+        particle.vy;
+
+      particle.vy +=
+        0.22;
+
+      particle.vx *=
+        0.99;
+
+      particle.life -=
+        0.018;
+
+
+      if (
+        particle.y >
+        groundY
+      ) {
+
+        particle.y =
+          groundY;
+
+        particle.vy *=
+          -0.35;
+      }
+    }
+  );
+
+
+  particles =
+    particles.filter(
+      particle =>
+        particle.life >
+        0
+    );
+}
+
+
+// -----------------------------
+// DRAW SHATTER PIECES
+// -----------------------------
+
+function drawParticles() {
+
+  particles.forEach(
+    function(particle) {
+
+      ctx.globalAlpha =
+        Math.max(
+          0,
+          particle.life
+        );
+
+      ctx.fillStyle =
+        "#ef4444";
+
+      ctx.fillRect(
+        particle.x,
+        particle.y,
+        particle.size,
+        particle.size
+      );
+    }
+  );
+
+  ctx.globalAlpha = 1;
+}
+
+
+// -----------------------------
+// INITIAL DRAWING
+// -----------------------------
+
+function drawInitialScene() {
+
+  drawBackground();
+
+  const position =
+    getBallPosition(0);
+
+  lastBall =
+    position;
+
+  drawBall(
+    position
+  );
+
+  timer.textContent =
+    "0.00 s";
+
+  heightNow.textContent =
+    h0.toFixed(1) +
+    " ft";
+}
+
+
+// -----------------------------
+// IMPACT
+// -----------------------------
+
+function finishImpact() {
+
+  running = false;
+
+  shattered = true;
+
+  createShatter(
+    lastBall.x,
+    groundY -
+    ballRadius / 2
+  );
+
+  timer.textContent =
+    impactTime.toFixed(2) +
+    " s";
+
+  heightNow.textContent =
+    "0.0 ft";
+
+  message.innerHTML =
+    "The ball hit the ground after <strong>" +
+    impactTime.toFixed(2) +
+    " seconds</strong>.";
+}
+
+
+// -----------------------------
+// ANIMATION
+// -----------------------------
+
+function animate(now) {
+
+  drawBackground();
+
+
+  if (running) {
+
+    const physicalTime =
+      (
+        now -
+        startReal
+      ) /
+      1000 *
+      playbackRate;
+
+    const t =
+      Math.min(
+        physicalTime,
+        impactTime
+      );
+
+    const position =
+      getBallPosition(t);
+
+    lastBall =
+      position;
+
+
+    drawTrajectory(
+      t
+    );
+
+    drawBall(
+      position
+    );
+
+
+    timer.textContent =
+      t.toFixed(2) +
+      " s";
+
+    heightNow.textContent =
+      Math.max(
+        0,
+        position.height
+      ).toFixed(1) +
+      " ft";
+
+
+    if (
+      t >=
+      impactTime
+    ) {
+
+      finishImpact();
+    }
+
+  } else if (
+    !shattered
+  ) {
+
+    drawBall(
+      getBallPosition(0)
+    );
+  }
+
+
+  if (shattered) {
+
+    updateParticles();
+
+    drawParticles();
+  }
+
+
+  if (
+    running ||
+    particles.length >
+    0
+  ) {
+
+    animationId =
+      requestAnimationFrame(
+        animate
+      );
+  }
+}
+
+
+// -----------------------------
+// LAUNCH
+// -----------------------------
+
+function launch() {
+
+  const velocity =
+    Number(
+      velocityInput.value
+    );
+
+  const height =
+    Number(
+      heightInput.value
+    );
+
+
+  if (
+    !Number.isFinite(
+      velocity
+    ) ||
+    !Number.isFinite(
+      height
+    ) ||
+    height <= 0
+  ) {
+
+    message.textContent =
+      "Use a valid velocity and a building height greater than 0.";
+
+    return;
+  }
+
+
+  v0 =
+    clamp(
+      velocity,
+      -500,
+      500
+    );
+
+  h0 =
+    clamp(
+      height,
+      1,
+      1000
+    );
+
+
+  velocityInput.value =
+    v0;
+
+  heightInput.value =
+    h0;
+
+
+  impactTime =
+    calculateImpactTime(
+      v0,
+      h0
+    );
+
+
+  updateEquation();
+
+
+  if (
+    animationId
+  ) {
+
+    cancelAnimationFrame(
+      animationId
+    );
+  }
+
+
+  particles = [];
+
+  shattered = false;
+
+  running = true;
+
+  startReal =
+    performance.now();
+
+  message.textContent =
+    "Ball in flight…";
+
+  launchButton.textContent =
+    "Launch Again";
+
+
+  animationId =
+    requestAnimationFrame(
+      animate
+    );
+}
+
+
+// -----------------------------
+// LAUNCH BUTTON
+// -----------------------------
+
+launchButton.addEventListener(
+  "click",
+  launch
+);
+
+
+// -----------------------------
+// RESET BUTTON
+// -----------------------------
+
+resetButton.addEventListener(
+  "click",
+  function() {
+
+    if (
+      animationId
+    ) {
+
+      cancelAnimationFrame(
+        animationId
+      );
+    }
+
+
+    running = false;
+
+    shattered = false;
+
+    particles = [];
+
+
+    v0 =
+      clamp(
+        Number(
+          velocityInput.value
+        ) ||
+        32,
+        -500,
+        500
+      );
+
+    h0 =
+      clamp(
+        Number(
+          heightInput.value
+        ) ||
+        100,
+        1,
+        1000
+      );
+
+
+    velocityInput.value =
+      v0;
+
+    heightInput.value =
+      h0;
+
+
+    impactTime =
+      calculateImpactTime(
+        v0,
+        h0
+      );
+
+
+    updateEquation();
+
+
+    message.textContent =
+      "Enter values and launch the ball.";
+
+    launchButton.textContent =
+      "Launch Ball";
+
+
+    drawInitialScene();
+  }
+);
+
+
+// -----------------------------
+// STARTUP
+// -----------------------------
+
+impactTime =
+  calculateImpactTime(
+    v0,
+    h0
+  );
+
+updateEquation();
+
+drawInitialScene();
+
+</script>
+
+</body>
+</html>
+```
